@@ -1,0 +1,321 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>FDEX 图构服务</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <svg class="icon-sprite" aria-hidden="true">
+    <symbol id="icon-sparkles" viewBox="0 0 24 24"><path d="m12 3-1.9 5.1L5 10l5.1 1.9L12 17l1.9-5.1L19 10l-5.1-1.9Z"/><path d="M5 3v4M3 5h4M19 17v4M17 19h4"/></symbol>
+    <symbol id="icon-image" viewBox="0 0 24 24"><rect width="18" height="18" x="3" y="3" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></symbol>
+    <symbol id="icon-history" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5M12 7v5l3 2"/></symbol>
+    <symbol id="icon-wallet" viewBox="0 0 24 24"><path d="M20 7V5a2 2 0 0 0-2-2H5a3 3 0 0 0 0 6h16v10a2 2 0 0 1-2 2H5a3 3 0 0 1-3-3V6"/><path d="M16 14h2"/></symbol>
+    <symbol id="icon-plug" viewBox="0 0 24 24"><path d="M12 22v-5M9 8V2M15 8V2M18 8v4a6 6 0 0 1-12 0V8Z"/></symbol>
+    <symbol id="icon-users" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></symbol>
+    <symbol id="icon-log-out" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></symbol>
+    <symbol id="icon-download" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></symbol>
+    <symbol id="icon-pencil" viewBox="0 0 24 24"><path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></symbol>
+    <symbol id="icon-upload" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></symbol>
+    <symbol id="icon-plus" viewBox="0 0 24 24"><path d="M5 12h14M12 5v14"/></symbol>
+    <symbol id="icon-arrow-right" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></symbol>
+    <symbol id="icon-check" viewBox="0 0 24 24"><path d="m20 6-11 11-5-5"/></symbol>
+    <symbol id="icon-alert-circle" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></symbol>
+    <symbol id="icon-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></symbol>
+    <symbol id="icon-loader" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-6.22-8.56"/></symbol>
+    <symbol id="icon-lock" viewBox="0 0 24 24"><rect width="18" height="11" x="3" y="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></symbol>
+    <symbol id="icon-copy" viewBox="0 0 24 24"><rect width="14" height="14" x="8" y="8" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></symbol>
+    <symbol id="icon-shield" viewBox="0 0 24 24"><path d="M20 13c0 5-3.5 7.5-8 9-4.5-1.5-8-4-8-9V5l8-3 8 3Z"/><path d="m9 12 2 2 4-4"/></symbol>
+    <symbol id="icon-x" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol>
+    <symbol id="icon-refresh" viewBox="0 0 24 24"><path d="M20 7h-5V2M4 17h5v5"/><path d="M9.8 5.7A8 8 0 0 0 5 13M18.2 18.3A8 8 0 0 0 19 11"/></symbol>
+    <symbol id="icon-file-image" viewBox="0 0 24 24"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><circle cx="10" cy="12" r="2"/><path d="m20 17-4-4-8 8"/></symbol>
+    <symbol id="icon-coins" viewBox="0 0 24 24"><circle cx="8" cy="8" r="6"/><path d="M18.1 10.4A6 6 0 1 1 10.4 18.1M7 6h1.5a1.5 1.5 0 0 1 0 3H7M7 9h2M8 6v6"/></symbol>
+    <symbol id="icon-key" viewBox="0 0 24 24"><circle cx="7.5" cy="15.5" r="5.5"/><path d="m21 2-9.6 9.6M15 7l3 3"/></symbol>
+    <symbol id="icon-chevron-right" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></symbol>
+    <symbol id="icon-menu" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></symbol>
+    <symbol id="icon-eye" viewBox="0 0 24 24"><path d="M2.1 12a10.5 10.5 0 0 1 19.8 0 10.5 10.5 0 0 1-19.8 0"/><circle cx="12" cy="12" r="3"/></symbol>
+  </svg>
+
+  <section id="auth-screen" class="auth-screen">
+    <aside class="auth-visual" aria-label="挡车器安装详图参考">
+      <img src="/samples/reference-detail.png" alt="产品安装说明图示例">
+      <div class="auth-visual-shade"></div>
+      <div class="auth-brand">
+        <span class="brand-mark"><svg class="icon"><use href="#icon-sparkles"/></svg></span>
+        <span>FDEX / 图构</span>
+      </div>
+      <div class="auth-visual-copy">
+        <span class="eyebrow eyebrow-light">WORKSHOP IMAGE SERVICE</span>
+        <h1>从产品资料到可追溯的说明图。</h1>
+        <div class="auth-proof"><span>固定价格</span><span>版本留痕</span><span>WorkBuddy 共用</span></div>
+      </div>
+    </aside>
+    <main class="auth-panel">
+      <div class="auth-form-wrap">
+        <div class="auth-mobile-brand">FDEX / 图构</div>
+        <span class="eyebrow">ACCOUNT</span>
+        <h2>进入图片工作室</h2>
+        <p class="auth-lede">网页与 WorkBuddy 使用同一账户、余额和图稿。</p>
+        <form id="login-form" class="stack-form">
+          <label>账号<input id="login-username" name="username" autocomplete="username" required></label>
+          <label>密码<input id="login-password" name="password" type="password" autocomplete="current-password" required></label>
+          <button class="button button-primary button-wide" type="submit">登录</button>
+        </form>
+        <div id="demo-account-section" hidden>
+          <div class="auth-divider"><span>演示账户</span></div>
+          <div class="demo-grid">
+            <button class="button button-secondary demo-account" data-user="student_a">成员 A</button>
+            <button class="button button-secondary demo-account" data-user="student_b">成员 B</button>
+            <button class="button button-secondary demo-account" data-user="instructor">管理员</button>
+          </div>
+        </div>
+        <details id="register-details" class="register-details" hidden>
+          <summary>创建独立账户</summary>
+          <form id="register-form" class="stack-form compact-form">
+            <label>账号<input name="username" pattern="[a-zA-Z0-9_]{3,32}" required></label>
+            <label>显示名称<input name="displayName" required></label>
+            <label>密码<input name="password" type="password" minlength="8" required></label>
+            <button class="button button-dark" type="submit">创建并登录</button>
+          </form>
+        </details>
+      </div>
+    </main>
+  </section>
+
+  <div id="app-shell" class="app-shell" hidden>
+    <aside id="sidebar" class="sidebar">
+      <div class="brand-row">
+        <span class="brand-mark"><svg class="icon"><use href="#icon-sparkles"/></svg></span>
+        <div><strong>FDEX / 图构</strong><small>IMAGE STUDIO</small></div>
+      </div>
+      <nav class="nav-list" aria-label="主要导航">
+        <button class="nav-item active" data-view="studio"><svg class="icon"><use href="#icon-sparkles"/></svg><span>创作台</span></button>
+        <button class="nav-item" data-view="library"><svg class="icon"><use href="#icon-image"/></svg><span>图稿库</span><b id="nav-image-count">0</b></button>
+        <button class="nav-item" data-view="ledger"><svg class="icon"><use href="#icon-wallet"/></svg><span>账本</span></button>
+        <button class="nav-item" data-view="connect"><svg class="icon"><use href="#icon-plug"/></svg><span>接入 WorkBuddy</span></button>
+        <button id="settings-nav" class="nav-item" data-view="settings" hidden><svg class="icon"><use href="#icon-key"/></svg><span>系统设置</span></button>
+        <button id="admin-nav" class="nav-item" data-view="admin" hidden><svg class="icon"><use href="#icon-users"/></svg><span>成员与额度</span></button>
+      </nav>
+      <div class="sidebar-note">
+        <svg class="icon"><use href="#icon-shield"/></svg>
+        <div><strong>服务端鉴权</strong><span>密钥只保存在后端</span></div>
+      </div>
+      <div class="user-block">
+        <div id="user-avatar" class="avatar">A</div>
+        <div class="user-copy"><strong id="sidebar-user-name">学员 A</strong><span id="sidebar-user-role">成员</span></div>
+        <button id="logout-button" class="icon-button icon-button-dark" title="退出登录"><svg class="icon"><use href="#icon-log-out"/></svg></button>
+      </div>
+    </aside>
+
+    <main class="workspace">
+      <header class="topbar">
+        <button id="mobile-menu" class="icon-button mobile-menu" title="打开导航"><svg class="icon"><use href="#icon-menu"/></svg></button>
+        <div class="topbar-title"><span id="topbar-kicker">CREATE</span><strong id="topbar-title">创作台</strong></div>
+        <div class="topbar-actions">
+          <span id="provider-pill" class="status-pill status-pill-muted">MOCK</span>
+          <button id="balance-button" class="balance-pill" title="查看账本"><svg class="icon"><use href="#icon-coins"/></svg><strong id="balance-value">100</strong><span>Credits</span></button>
+        </div>
+      </header>
+
+      <div class="view-container">
+        <section id="view-studio" class="view active">
+          <div class="page-heading">
+            <div><span class="eyebrow">CREATE / 01</span><h1>产品说明图创作台</h1><p>资料先成需求，再生成可继续调整的图稿。</p></div>
+            <button id="load-sample-button" class="button button-secondary"><svg class="icon"><use href="#icon-file-image"/></svg>载入课堂案例</button>
+          </div>
+          <div class="studio-layout">
+            <section class="input-panel">
+              <div class="section-heading"><div><span class="section-index">01</span><h2>资料与需求</h2></div><span id="spec-save-state" class="muted-tag">未保存</span></div>
+              <div class="asset-zone">
+                <div class="asset-zone-head"><span>产品资料与参考图</span><button id="upload-trigger" class="text-button"><svg class="icon"><use href="#icon-upload"/></svg>上传</button></div>
+                <input id="file-input" type="file" accept="image/png,image/jpeg,image/webp" hidden>
+                <div id="asset-list" class="asset-list"><div class="empty-inline">还没有资料</div></div>
+              </div>
+              <form id="spec-form" class="spec-form">
+                <label class="field field-wide"><span>产品名称</span><input name="productName" value="挡车器" required></label>
+                <div class="dimension-row">
+                  <label class="field"><span>长</span><div class="unit-input"><input name="length" type="number" value="530" min="0"><em>mm</em></div></label>
+                  <label class="field"><span>宽</span><div class="unit-input"><input name="width" type="number" value="140" min="0"><em>mm</em></div></label>
+                  <label class="field"><span>高</span><div class="unit-input"><input name="height" type="number" value="80" min="0"><em>mm</em></div></label>
+                </div>
+                <label class="field field-wide"><span>材质</span><input name="material" value="橡胶（丁苯橡胶）本体与反光黄色警示条"></label>
+                <label class="field field-wide"><span>固定方式</span><input name="mounting" value="地面 M10 膨胀螺栓固定，每件两颗"></label>
+                <label class="field field-wide"><span>图内标注</span><textarea name="labels" rows="3">橡胶主体
+反光警示条
+M10 膨胀螺栓，每件两颗</textarea></label>
+                <label class="field field-wide"><span>待确认项</span><textarea name="unknowns" rows="2">安装位置 1000 mm 是否适用
+精确孔位</textarea></label>
+                <label class="field field-wide"><span>版式要求</span><input name="layout" value="横向、中文、白底、清晰说明书风格"></label>
+                <label class="field field-wide"><span>附加要求</span><textarea name="rawInput" rows="3">按资料生成产品说明图，突出外观、侧面与安装方式。只使用已有依据的参数；1000 mm 未确认则省略。</textarea></label>
+                <div class="source-note"><svg class="icon"><use href="#icon-alert-circle"/></svg><span id="source-note-text">课堂预设仅用于演示，不是视觉模型识别记录。</span></div>
+                <button id="save-spec-button" class="button button-dark button-wide" type="submit"><svg class="icon"><use href="#icon-check"/></svg>保存绘图需求</button>
+              </form>
+              <div class="saved-specs"><div class="asset-zone-head"><span>最近需求</span><span id="spec-version-label">—</span></div><div id="saved-spec-list" class="saved-spec-list"><div class="empty-inline">保存后可开始生成</div></div></div>
+            </section>
+
+            <section class="preview-panel">
+              <div class="section-heading preview-heading">
+                <div><span class="section-index">02</span><h2>图稿预览</h2></div>
+                <div class="preview-tools"><span id="preview-workflow-state" class="workflow-state is-idle"><i></i><b id="preview-workflow-label">待生成</b></span><span id="preview-version" class="version-badge" hidden>V1</span><button id="preview-download" class="icon-button" title="下载当前图稿" hidden><svg class="icon"><use href="#icon-download"/></svg></button></div>
+              </div>
+              <div id="preview-stage" class="preview-stage">
+                <div class="preview-empty">
+                  <span class="empty-illustration"><svg class="icon"><use href="#icon-image"/></svg></span>
+                  <strong>等待第一张图稿</strong>
+                  <p>保存需求后，以固定价格生成一张说明图。</p>
+                </div>
+                <div id="job-overlay" class="job-overlay" hidden>
+                  <div class="job-orbit"><svg class="icon spin"><use href="#icon-loader"/></svg></div>
+                  <div class="job-overlay-steps" aria-hidden="true"><span>需求已提交</span><i></i><span>图像生成</span><i></i><span>版本保存</span></div>
+                  <strong id="job-overlay-title">正在提交任务</strong>
+                  <span id="job-overlay-detail">服务端正在处理固定价格与任务状态</span>
+                  <div class="job-progress" aria-hidden="true"><i id="job-overlay-progress"></i></div>
+                </div>
+                <img id="preview-image" alt="生成的产品说明图" hidden>
+              </div>
+              <div class="preview-meta">
+                <div><span>当前需求</span><strong id="preview-spec-name">尚未保存</strong></div>
+                <div><span>图片版本</span><strong id="preview-version-copy">—</strong></div>
+                <div><span>生成模式</span><strong id="preview-mode">MOCK</strong></div>
+              </div>
+              <div class="generation-action">
+                <div class="cost-copy"><span><svg class="icon"><use href="#icon-coins"/></svg>新生成固定价</span><strong><b id="generate-price">10</b> Credits / 张</strong><small>任务完成前仅允许保留当前一次提交</small></div>
+                <button id="generate-button" class="button button-accent generate-button" type="button" disabled aria-busy="false"><svg class="icon"><use href="#icon-sparkles"/></svg><span>生成一张</span></button>
+              </div>
+              <div id="generate-lock-notice" class="generate-lock-notice" hidden aria-live="polite"><span class="generate-lock-icon"><svg class="icon"><use href="#icon-lock"/></svg></span><div><strong>生成任务处理中</strong><span>提交按钮已锁定，完成后自动开放下一次生成。</span></div><span id="generate-lock-badge" class="generate-lock-badge">LOCKED</span></div>
+              <div id="active-job" class="active-job" hidden></div>
+              <div class="recent-strip"><div class="asset-zone-head"><span>最近生成</span><button class="text-button" data-view-link="library">查看全部<svg class="icon"><use href="#icon-chevron-right"/></svg></button></div><div id="recent-images" class="recent-images"><div class="empty-inline">生成后在这里保留版本</div></div></div>
+            </section>
+          </div>
+        </section>
+
+        <section id="view-library" class="view">
+          <div class="page-heading">
+            <div><span class="eyebrow">LIBRARY / 02</span><h1>图稿与版本</h1><p>每次继续调整都会创建新版本，父图不会被覆盖。</p></div>
+            <button id="library-refresh" class="button button-secondary"><svg class="icon"><use href="#icon-refresh"/></svg>刷新</button>
+          </div>
+          <div id="image-grid" class="image-grid"></div>
+        </section>
+
+        <section id="view-ledger" class="view">
+          <div class="page-heading"><div><span class="eyebrow">LEDGER / 03</span><h1>Credits 账本</h1><p>每次预留、消费与释放都保存为独立流水。</p></div></div>
+          <div class="wallet-band">
+            <div class="wallet-primary"><span>可用 Credits</span><strong id="ledger-available">100</strong><small>新生成 <b id="ledger-generate-price">10</b> / 编辑 <b id="ledger-edit-price">4</b></small></div>
+            <div class="wallet-stat"><span>处理中预留</span><strong id="ledger-reserved">0</strong></div>
+            <div class="wallet-stat"><span>累计消费</span><strong id="ledger-spent">0</strong></div>
+          </div>
+          <section class="table-panel">
+            <div class="section-heading"><div><h2>账务流水</h2></div><button id="ledger-refresh" class="icon-button" title="刷新流水"><svg class="icon"><use href="#icon-refresh"/></svg></button></div>
+            <div class="table-scroll"><table><thead><tr><th>时间</th><th>事件</th><th>说明</th><th>可用</th><th>消费</th></tr></thead><tbody id="transaction-body"></tbody></table></div>
+          </section>
+        </section>
+
+        <section id="view-connect" class="view">
+          <div class="page-heading"><div><span class="eyebrow">CONNECT / 04</span><h1>WorkBuddy 接入</h1><p>MCP 工具直接调用同一业务服务，不在客户端保存供应商密钥。</p></div></div>
+          <div class="connect-grid">
+            <section class="connect-panel">
+              <div class="section-heading"><div><span class="section-index">01</span><h2>服务状态</h2></div><span class="status-pill status-pill-success"><span class="status-dot"></span>运行中</span></div>
+              <dl class="detail-list"><div><dt>API 地址</dt><dd id="api-base-url">http://127.0.0.1:4310</dd></div><div><dt>生成价格</dt><dd><b id="connect-generate-price">10</b> Credits</dd></div><div><dt>编辑价格</dt><dd><b id="connect-edit-price">4</b> Credits</dd></div><div><dt>当前模式</dt><dd id="connect-provider-mode">MOCK</dd></div></dl>
+            </section>
+            <section class="connect-panel">
+              <div class="section-heading"><div><span class="section-index">02</span><h2>访问令牌</h2></div><button id="create-token-button" class="button button-dark button-small"><svg class="icon"><use href="#icon-key"/></svg>创建令牌</button></div>
+              <div id="token-list" class="token-list"></div>
+              <div id="new-token" class="new-token" hidden><span>令牌仅显示一次</span><div class="token-copy-row"><code id="new-token-value"></code><button id="copy-token-button" class="icon-button" title="复制令牌"><svg class="icon"><use href="#icon-copy"/></svg></button></div></div>
+            </section>
+          </div>
+          <section class="code-panel">
+            <div class="section-heading"><div><span class="section-index">03</span><h2>MCP 配置</h2></div><button id="copy-config-button" class="text-button"><svg class="icon"><use href="#icon-copy"/></svg>复制配置</button></div>
+            <pre id="mcp-config-code"></pre>
+          </section>
+          <section class="skill-panel">
+            <div><span class="eyebrow">WORKBUDDY SKILL</span><h2>先查余额，再明确生成或编辑</h2></div>
+            <p>Skill 使用 <code>get_balance</code>、<code>prepare_drawing_spec</code>、<code>generate_image</code>、<code>edit_image</code> 与 <code>get_image_job</code>。慢任务只查询原 job，不重复提交。</p>
+          </section>
+        </section>
+
+        <section id="view-settings" class="view">
+          <div class="page-heading"><div><span class="eyebrow">SYSTEM / 05</span><h1>系统设置</h1><p>管理员可手动配置图像服务；保存后立即生效，无需修改 `.env` 或重启。</p></div><span id="settings-provider-status" class="status-pill status-pill-muted">未配置</span></div>
+          <div class="settings-layout">
+            <section class="settings-panel">
+              <div class="section-heading"><div><span class="section-index">01</span><h2>图像服务接入</h2></div><button id="settings-refresh" class="icon-button" title="刷新设置"><svg class="icon"><use href="#icon-refresh"/></svg></button></div>
+              <form id="provider-settings-form" class="settings-form">
+                <div class="settings-row">
+                  <label class="field"><span>运行模式</span><select name="providerMode"><option value="mock">MOCK / 离线演示</option><option value="live">LIVE / 真实模型</option></select></label>
+                  <label class="field"><span>接口类型</span><select name="imageApiStyle"><option value="dashscope">DashScope / 通义千问</option><option value="openai">OpenAI Images 兼容</option><option value="chat">OpenAI Chat 兼容（多模态对话出图）</option></select></label>
+                </div>
+                <label class="field field-wide"><span>API 地址</span><input name="imageApiBaseUrl" type="url" inputmode="url" placeholder="https://api.example.com/v1（也可粘贴完整接口地址）"></label>
+                <div class="settings-row">
+                  <label class="field"><span>生成模型</span><input name="imageGenerateModel" list="provider-model-options" autocomplete="off" placeholder="qwen-image-2.0-pro"></label>
+                  <label class="field"><span>编辑模型</span><input name="imageEditModel" list="provider-model-options" autocomplete="off" placeholder="qwen-image-2.0-pro"></label>
+                </div>
+                <datalist id="provider-model-options"></datalist>
+                <label class="field field-wide"><span>API Key</span><div class="secret-input"><input id="settings-api-key" name="imageApiKey" type="password" autocomplete="new-password" placeholder="留空将保留当前密钥"><button id="toggle-api-key" class="icon-button" type="button" title="显示或隐藏密钥"><svg class="icon"><use href="#icon-eye"/></svg></button></div><small id="settings-key-hint">尚未配置密钥</small></label>
+                <label class="check-field"><input id="settings-clear-key" name="clearApiKey" type="checkbox"><span>清除已保存的 API Key</span></label>
+                <div class="settings-row">
+                  <label class="field"><span>图片尺寸</span><input name="imageSize" value="1536x1024" placeholder="1536x1024"></label>
+                  <label class="field"><span>输出格式</span><select name="imageOutputFormat"><option value="png">PNG</option><option value="jpeg">JPEG</option><option value="webp">WebP</option></select></label>
+                </div>
+                <label class="field field-wide"><span>反向提示词</span><textarea name="imageNegativePrompt" rows="3" placeholder="可选，例如：低清晰度、错误文字"></textarea></label>
+                <div class="settings-toggles">
+                  <label class="check-field"><input name="imagePromptExtend" type="checkbox"><span>启用供应商提示词扩写</span></label>
+                  <label class="check-field"><input name="imageWatermark" type="checkbox"><span>保留供应商水印</span></label>
+                </div>
+                <div id="settings-test-result" class="settings-test-result" hidden></div>
+                <div class="settings-actions"><span id="settings-updated-at">尚未保存</span><div class="settings-action-buttons"><button id="test-provider-settings" class="button button-secondary" type="button"><svg class="icon"><use href="#icon-plug"/></svg>测试连接</button><button id="save-provider-settings" class="button button-accent" type="submit"><svg class="icon"><use href="#icon-shield"/></svg>保存并启用</button></div></div>
+              </form>
+            </section>
+            <aside class="settings-notes">
+              <span class="eyebrow">SECURITY</span>
+              <h2>密钥不会下发到浏览器</h2>
+              <p>页面只能看到末四位提示。密钥由服务端保存，并仅用于向图像供应商发起请求。</p>
+              <dl class="detail-list"><div><dt>读取权限</dt><dd>仅管理员</dd></div><div><dt>保存后</dt><dd>立即热切换</dd></div><div><dt>留空密钥</dt><dd>保留原值</dd></div></dl>
+            </aside>
+          </div>
+        </section>
+
+        <section id="view-admin" class="view">
+          <div class="page-heading"><div><span class="eyebrow">ADMIN / 06</span><h1>成员与额度</h1><p>体验额度通过补偿流水发放，不会直接改余额而不留记录。</p></div></div>
+          <section class="table-panel">
+            <div class="section-heading"><div><h2>账户列表</h2></div><button id="admin-refresh" class="icon-button" title="刷新账户"><svg class="icon"><use href="#icon-refresh"/></svg></button></div>
+            <div class="table-scroll"><table><thead><tr><th>账户</th><th>角色</th><th>可用</th><th>预留</th><th>累计消费</th><th>发放额度</th></tr></thead><tbody id="admin-user-body"></tbody></table></div>
+          </section>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <div id="edit-modal" class="modal" hidden>
+    <div class="modal-backdrop" data-close-modal></div>
+    <div class="modal-dialog" role="dialog" aria-modal="true" aria-labelledby="edit-modal-title">
+      <button class="icon-button modal-close" data-close-modal title="关闭"><svg class="icon"><use href="#icon-x"/></svg></button>
+      <span class="eyebrow">EDIT / NEW VERSION</span><h2 id="edit-modal-title">继续调整图稿</h2>
+      <div class="edit-parent"><div id="edit-parent-preview" class="edit-parent-preview"></div><div><span>父图</span><strong id="edit-parent-label">V1</strong><small>原版本会完整保留</small></div></div>
+      <div class="edit-workflow-note"><svg class="icon"><use href="#icon-lock"/></svg><div><strong>版本任务独立锁定</strong><span>提交后不会覆盖父图，按钮会保持锁定直到任务结束。</span></div></div>
+      <form id="edit-form" class="stack-form">
+        <input id="edit-parent-id" type="hidden">
+        <label>修改要求<textarea id="edit-instruction" rows="4" required>把黄色警示条改为橙色，并保持现有轮廓、尺寸和其他文字不变。</textarea></label>
+        <label>必须保留<textarea id="edit-preserve" rows="2">轮廓、530 / 140 / 80 mm 尺寸、M10 螺栓说明和其他文字</textarea></label>
+        <div class="modal-cost"><div><span>继续调整固定价</span><strong><b id="edit-price">4</b> Credits / 次</strong></div><button id="edit-submit-button" class="button button-accent" type="submit"><svg class="icon"><use href="#icon-pencil"/></svg>创建新版本</button></div>
+      </form>
+    </div>
+  </div>
+
+  <div id="action-modal" class="modal" hidden>
+    <div class="modal-backdrop" data-close-action-modal></div>
+    <div class="modal-dialog action-dialog" role="dialog" aria-modal="true" aria-labelledby="action-modal-title">
+      <button class="icon-button modal-close" data-close-action-modal title="关闭"><svg class="icon"><use href="#icon-x"/></svg></button>
+      <span id="action-modal-kicker" class="eyebrow">ACTION</span>
+      <h2 id="action-modal-title">确认操作</h2>
+      <p id="action-modal-copy" class="action-copy"></p>
+      <label id="action-input-wrap" class="field" hidden><span id="action-input-label">名称</span><input id="action-input" type="text"></label>
+      <div class="action-footer"><button id="action-cancel" class="button button-secondary" type="button" data-close-action-modal>取消</button><button id="action-confirm" class="button button-dark" type="button"></button></div>
+    </div>
+  </div>
+
+  <div id="toast-region" class="toast-region" aria-live="polite"></div>
+  <script type="module" src="/app.js"></script>
+</body>
+</html>

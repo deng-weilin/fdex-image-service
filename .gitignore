@@ -1,0 +1,29 @@
+# Local secrets and runtime state
+.env
+.env.*
+!.env.example
+runtime/
+node_modules/
+coverage/
+
+# Logs, temporary files, editor state
+*.log
+*.bak-*
+*.tmp
+$null
+Thumbs.db
+.DS_Store
+.vscode/
+.idea/
+
+# Workshop materials are intentionally not redistributed
+0[1-8]_*.md
+学员手册_双击打开.html
+SHA256SUMS.json
+starter/
+templates/
+data/
+deliverables/
+.codex-build-presentation/
+HANDOFF.md
+SERVICE_README.md

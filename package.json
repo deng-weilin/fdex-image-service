@@ -1,0 +1,18 @@
+{
+  "name": "fdex-image-service",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Web and WorkBuddy shared workshop image service",
+  "license": "MIT",
+  "scripts": {
+    "start": "node server.js",
+    "mcp": "node mcp/server.js",
+    "test": "node --test tests/*.test.js",
+    "test:ui": "node scripts/browser-smoke.mjs",
+    "test:settings-ui": "node scripts/settings-smoke.mjs"
+  },
+  "engines": {
+    "node": ">=24"
+  }
+}
