@@ -1,0 +1,24 @@
+services:
+  image-service:
+    build:
+      context: .
+    restart: unless-stopped
+    env_file:
+      - .env.production
+    environment:
+      HOST: 0.0.0.0
+      PORT: 4310
+      DATA_DIR: /app/runtime
+    ports:
+      - "127.0.0.1:${FDEX_PORT:-4310}:4310"
+    volumes:
+      - fdex-runtime:/app/runtime
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:4310/api/health').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+
+volumes:
+  fdex-runtime:

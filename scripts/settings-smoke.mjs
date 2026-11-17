@@ -160,7 +160,7 @@ try {
     }))()`);
   }
 
-  const desktop = await layout(client);
+  const settingsDesktop = await layout(client);
   await screenshot(client, "ui-settings-desktop.png");
   const details = await evaluate(client, `(() => ({
     keyInputEmpty: document.querySelector("#settings-api-key").value === "",
@@ -170,12 +170,102 @@ try {
     status: document.querySelector("#settings-provider-status").textContent
   }))()`);
 
+  await evaluate(client, "document.querySelector('[data-view=account]').click()");
+  await waitFor(client, "document.querySelector('#view-account').classList.contains('active')");
+  await new Promise((resolve) => setTimeout(resolve, 250));
+  const accountDesktop = await layout(client);
+  await screenshot(client, "ui-account-desktop.png");
+  const accountDetails = await evaluate(client, `(() => ({
+    formVisible: Boolean(document.querySelector("#change-password-form")),
+    fields: document.querySelectorAll("#change-password-form input[type=password]").length,
+    submitText: document.querySelector("#change-password-form button[type=submit]").textContent.trim()
+  }))()`);
+
+  await evaluate(client, "document.querySelector('#admin-nav').click()");
+  await waitFor(client, "document.querySelector('#view-admin').classList.contains('active') && document.querySelectorAll('#admin-user-body tr').length > 0");
+  const adminDetails = await evaluate(client, `(() => ({
+    rows: document.querySelectorAll("#admin-user-body tr").length,
+    resetButtons: document.querySelectorAll(".reset-password-button").length,
+    createButtonVisible: !document.querySelector("#admin-create-user-button").hidden
+  }))()`);
+  await evaluate(client, "document.querySelector('#admin-create-user-button').click()");
+  await waitFor(client, "!document.querySelector('#create-user-modal').hidden");
+  const createAccountDetails = await evaluate(client, `(() => ({
+    modalVisible: !document.querySelector("#create-user-modal").hidden,
+    roleOptions: document.querySelectorAll("#create-user-form select[name=role] option").length,
+    initialCredits: document.querySelector("#create-user-form input[name=initialCredits]").value
+  }))()`);
+  await screenshot(client, "ui-admin-create-desktop.png");
+
+  let accountFlow = null;
+  if (process.env.SMOKE_ACCOUNT_FLOW === "1") {
+    const suffix = Date.now().toString(36);
+    const username = `smoke_${suffix}`;
+    const initialPassword = `initial-${suffix}`;
+    const resetPassword = `reset-${suffix}`;
+    const finalPassword = `final-${suffix}`;
+    await evaluate(client, `(() => {
+      const form = document.querySelector("#create-user-form");
+      form.elements.namedItem("username").value = ${JSON.stringify(username)};
+      form.elements.namedItem("displayName").value = "浏览器验收成员";
+      form.elements.namedItem("password").value = ${JSON.stringify(initialPassword)};
+      form.elements.namedItem("confirmPassword").value = ${JSON.stringify(initialPassword)};
+      form.elements.namedItem("role").value = "member";
+      form.elements.namedItem("initialCredits").value = "12";
+      form.requestSubmit();
+    })()`);
+    await waitFor(client, `(() => document.querySelector("#create-user-modal").hidden && [...document.querySelectorAll("#admin-user-body small")].some((node) => node.textContent === "@${username}"))()`);
+
+    await evaluate(client, `(() => {
+      const row = [...document.querySelectorAll("#admin-user-body tr")].find((item) => item.querySelector("small").textContent === "@${username}");
+      row.querySelector(".reset-password-button").click();
+    })()`);
+    await waitFor(client, "!document.querySelector('#reset-password-modal').hidden");
+    await evaluate(client, `(() => {
+      const form = document.querySelector("#reset-password-form");
+      form.elements.namedItem("newPassword").value = ${JSON.stringify(resetPassword)};
+      form.elements.namedItem("confirmPassword").value = ${JSON.stringify(resetPassword)};
+      form.requestSubmit();
+    })()`);
+    await waitFor(client, "document.querySelector('#reset-password-modal').hidden");
+
+    await evaluate(client, "document.querySelector('#logout-button').click()");
+    await waitFor(client, "!document.querySelector('#auth-screen').hidden");
+    await evaluate(client, `(() => {
+      document.querySelector("#login-username").value = ${JSON.stringify(username)};
+      document.querySelector("#login-password").value = ${JSON.stringify(resetPassword)};
+      document.querySelector("#login-form").requestSubmit();
+    })()`);
+    await waitFor(client, "!document.querySelector('#app-shell').hidden && document.querySelector('#admin-nav').hidden");
+    await evaluate(client, "document.querySelector('[data-view=account]').click()");
+    await waitFor(client, "document.querySelector('#view-account').classList.contains('active')");
+    await evaluate(client, `(() => {
+      const form = document.querySelector("#change-password-form");
+      form.elements.namedItem("currentPassword").value = ${JSON.stringify(resetPassword)};
+      form.elements.namedItem("newPassword").value = ${JSON.stringify(finalPassword)};
+      form.elements.namedItem("confirmPassword").value = ${JSON.stringify(finalPassword)};
+      form.requestSubmit();
+    })()`);
+    await waitFor(client, "!document.querySelector('#auth-screen').hidden");
+    await evaluate(client, `(() => {
+      document.querySelector("#login-username").value = ${JSON.stringify(username)};
+      document.querySelector("#login-password").value = ${JSON.stringify(finalPassword)};
+      document.querySelector("#login-form").requestSubmit();
+    })()`);
+    await waitFor(client, "!document.querySelector('#app-shell').hidden");
+    accountFlow = { username, created: true, reset: true, passwordChanged: true, relogin: true };
+  } else {
+    await evaluate(client, "document.querySelector('[data-close-create-user-modal]').click()");
+  }
+
   await setViewport(client, 390, 844);
   await new Promise((resolve) => setTimeout(resolve, 250));
+  await evaluate(client, "document.querySelector('[data-view=account]').click()");
+  await waitFor(client, "document.querySelector('#view-account').classList.contains('active')");
   const mobile = await layout(client);
-  await screenshot(client, "ui-settings-mobile.png");
+  await screenshot(client, "ui-account-mobile.png");
 
-  console.log(JSON.stringify({ desktop, mobile, details, connectionTest }, null, 2));
+  console.log(JSON.stringify({ settingsDesktop, accountDesktop, mobile, details, accountDetails, adminDetails, createAccountDetails, accountFlow, connectionTest }, null, 2));
 } finally {
   try {
     await client?.send("Browser.close");

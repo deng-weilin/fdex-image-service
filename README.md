@@ -11,7 +11,8 @@
 - 固定价格新生成，以及基于已有图稿继续调整。
 - 任务状态、失败释放、结果未知保留预留、幂等提交和并发余额保护。
 - 图稿 V1/V2/V3 版本关系、预览和下载。
-- 管理员维护 Provider 配置、成员和 Credits，API Key 不会返回浏览器。
+- 管理员开通成员、重置密码、维护 Provider 配置和 Credits，API Key 不会返回浏览器。
+- 成员可自行修改密码；改密会撤销全部旧网页会话和 WorkBuddy 令牌。
 - MCP Server 供 WorkBuddy 调用同一套业务 API。
 - Provider 支持 Mock、OpenAI Images 兼容接口和 DashScope 原生接口。
 
@@ -37,6 +38,25 @@ npm start
 三个演示账户使用同一个 `DEMO_PASSWORD`。也可以在 `ADMIN_PASSWORD` 中设置独立的管理员密码，至少 12 个字符。
 
 `.env.example` 默认使用 `IMAGE_PROVIDER=mock`，无需供应商密钥即可完整体验账户、任务、版本和 Credits 流程。Mock 输出是可预览和下载的 SVG 图稿。
+
+## 账户开通
+
+生产环境默认关闭自主注册。管理员登录后进入“成员与额度”，可创建普通成员或管理员、设置初始 Credits，并为成员重置密码。普通成员在“账户安全”中修改自己的密码。
+
+创建账号、修改密码和重置密码后，服务会撤销该账户的全部网页会话和 WorkBuddy Token。成员需要使用新密码重新登录；若仍需 WorkBuddy 接入，应重新创建 Token。
+
+## 容器部署
+
+仓库提供 `Dockerfile` 和 `compose.yaml`。生产部署先准备环境文件：
+
+```bash
+cp .env.production.example .env.production
+# 修改 APP_ORIGIN、ADMIN_PASSWORD 和 Provider 配置后：
+docker compose up -d --build
+curl http://127.0.0.1:4310/api/health
+```
+
+`compose.yaml` 默认只绑定 `127.0.0.1:4310`，应由 Caddy、Nginx 或云负载均衡终止 HTTPS。SQLite、上传资料和输出图稿保存在 `fdex-runtime` Volume。完整步骤见 [交付清单](docs/DELIVERY.md) 和 [部署与运维](docs/OPERATIONS.md)。
 
 ## 真实 Provider
 
@@ -77,7 +97,7 @@ IMAGE_RESPONSE_FORMAT=
 | `AUTH_RATE_LIMIT_WINDOW_MS` | `300000` | 认证限流窗口 |
 | `DUPLICATE_SUBMIT_WINDOW_MS` | `3000` | 相同付费请求的合并窗口 |
 
-完整 Provider 变量见 [.env.example](.env.example)。生产部署、备份和反向代理配置见 [docs/OPERATIONS.md](docs/OPERATIONS.md)。
+完整 Provider 变量见 [.env.example](.env.example)，生产模板见 [.env.production.example](.env.production.example)。
 
 ## 测试
 
@@ -85,7 +105,7 @@ IMAGE_RESPONSE_FORMAT=
 npm test
 ```
 
-自动化测试覆盖账户隔离、Credits 事务、失败释放、并发防透支、版本关系、MCP、Provider HTTP 合同、生产安全默认值、认证限流和 Windows 本地中文排版。
+自动化测试覆盖账户开通与密码重置、旧凭据撤销、账户隔离、Credits 事务、失败释放、并发防透支、版本关系、MCP、Provider HTTP 合同、生产安全默认值、认证限流和 Windows 本地中文排版。
 
 浏览器验收需要服务已启动，并会产生实际课堂 Credits：
 
@@ -94,6 +114,8 @@ $env:SMOKE_PASSWORD = "your-demo-password"
 npm run test:ui
 npm run test:settings-ui
 ```
+
+隔离测试环境可设置 `SMOKE_ACCOUNT_FLOW=1`，额外验证管理员开通成员、重置密码、成员自行改密和重新登录的完整浏览器流程。
 
 浏览器脚本会自动寻找 Edge，也可以设置 `EDGE_PATH`。截图写入被 Git 忽略的 `runtime/`。
 
@@ -114,7 +136,10 @@ src/          配置、数据库、鉴权、业务服务、Provider 和 HTTP API
 mcp/          WorkBuddy MCP Server
 scripts/      本地启动、图片排版和浏览器验收
 tests/        Node.js 自动化测试
-workbuddy/    WorkBuddy Skill 与 MCP 配置示例
+docs/         部署、交付、迭代和截图
+workbuddy/    WorkBuddy Skill 与 MCP 配置模板
+Dockerfile    生产容器镜像
+compose.yaml  单机 Compose 部署与持久化 Volume
 data/         本地课堂案例素材，不进入公开仓库
 runtime/      SQLite、上传和输出，不进入 Git
 ```
@@ -125,11 +150,13 @@ runtime/      SQLite、上传和输出，不进入 Git
 - 公开仓库不包含课程手册、模板、PPT 或课堂原始案例资料。
 - 生产模式强制 HTTPS Origin，关闭演示账户和自主注册，初始 Credits 默认为 `0`。
 - 认证接口按客户端 IP 限流，Cookie 使用 `HttpOnly`、`SameSite=Lax`，HTTPS 下附加 `Secure`。
+- 修改或重置密码会撤销目标账户的全部会话和 API Token。
 - 不要在录屏、Issue、日志或截图中暴露 `IMAGE_API_KEY`、会话令牌或 MCP Token。怀疑泄露时应立即在供应商或网页中轮换。
 
 ## 已知限制
 
 - SQLite 与单个 Node.js 实例适合课堂和轻量部署，不提供分布式任务队列或多实例写入协调。
+- 当前没有自动数据库迁移框架；升级前应按[迭代流程](docs/ITERATION.md)备份并验证数据兼容性。
 - 目前没有在线支付、团队组织、批量任务、多质量套餐和 OCR/视觉模型自动提取参数。
 - Windows 上可用 `System.Drawing` 叠加确定性中文文字层；Linux 会跳过本地文字层并保留 Provider 原图。
 - 模型输出的文字、尺寸和安装信息仍需人工复核，不应直接作为工程承载校核依据。

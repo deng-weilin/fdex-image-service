@@ -2,7 +2,7 @@ import fs from "node:fs";
 import fsPromises from "node:fs/promises";
 import path from "node:path";
 import { createProvider, ProviderDefiniteFailure, ProviderOutcomeUncertain } from "./provider.js";
-import { sha256, stableJson, uuid } from "./security.js";
+import { hashPassword, sha256, stableJson, uuid, verifyPassword } from "./security.js";
 import { withTransaction } from "./database.js";
 
 export class HttpError extends Error {
@@ -41,6 +41,22 @@ function stringArray(value, maxItems = 20, maxLength = 120) {
     .filter(Boolean)
     .slice(0, maxItems)
     .map((item) => item.slice(0, maxLength));
+}
+
+function normalizeUsername(value) {
+  const username = String(value ?? "").trim().toLowerCase();
+  if (!/^[a-z0-9_]{3,32}$/.test(username)) {
+    throw new HttpError(422, "validation_error", "账号需为 3-32 位字母、数字或下划线");
+  }
+  return username;
+}
+
+function validatePassword(value, label = "密码") {
+  const password = String(value ?? "");
+  if (password.length < 8 || password.length > 128) {
+    throw new HttpError(422, "validation_error", `${label}长度需为 8-128 位`);
+  }
+  return password;
 }
 
 function normalizeDimensions(value) {
@@ -673,6 +689,84 @@ export class ImageService {
       current = parent;
     }
     return chain.reverse();
+  }
+
+  createUser(input, actorId) {
+    const username = normalizeUsername(input.username);
+    const displayName = text(input.displayName || username, "显示名称", 60, true);
+    const password = validatePassword(input.password);
+    const role = String(input.role || "member").trim().toLowerCase();
+    if (!["member", "admin"].includes(role)) {
+      throw new HttpError(422, "validation_error", "账户角色无效");
+    }
+    const initialCredits = input.initialCredits === undefined || input.initialCredits === null || input.initialCredits === ""
+      ? Math.max(0, Number(this.config.initialCredits) || 0)
+      : Number(input.initialCredits);
+    if (!Number.isInteger(initialCredits) || initialCredits < 0 || initialCredits > 100000) {
+      throw new HttpError(422, "validation_error", "初始额度需为 0-100000 的整数");
+    }
+    if (this.db.prepare("SELECT 1 FROM users WHERE username = ?").get(username)) {
+      throw new HttpError(409, "username_exists", "账号已存在");
+    }
+
+    const id = uuid();
+    const now = isoNow();
+    try {
+      withTransaction(this.db, () => {
+        this.db.prepare(`
+          INSERT INTO users (id, username, display_name, password_hash, role, created_at)
+          VALUES (?, ?, ?, ?, ?, ?)
+        `).run(id, username, displayName, hashPassword(password), role, now);
+        this.db.prepare(`
+          INSERT INTO wallets (user_id, available, reserved, spent, updated_at)
+          VALUES (?, ?, 0, 0, ?)
+        `).run(id, initialCredits, now);
+        if (initialCredits > 0) {
+          this.db.prepare(`
+            INSERT INTO transactions (
+              id, user_id, job_id, type, available_delta, reserved_delta, spent_delta,
+              available_after, reserved_after, spent_after, description, actor_id, created_at
+            ) VALUES (?, ?, NULL, 'grant', ?, 0, 0, ?, 0, 0, '管理员创建账户初始额度', ?, ?)
+          `).run(uuid(), id, initialCredits, initialCredits, actorId, now);
+        }
+      });
+    } catch (error) {
+      if (/UNIQUE constraint failed/i.test(String(error?.message || ""))) {
+        throw new HttpError(409, "username_exists", "账号已存在");
+      }
+      throw error;
+    }
+    return this.listUsers().find((user) => user.id === id);
+  }
+
+  changePassword(userId, currentPassword, newPassword) {
+    const row = this.db.prepare("SELECT * FROM users WHERE id = ?").get(userId);
+    if (!row) throw new HttpError(404, "user_not_found", "账户不存在");
+    if (!verifyPassword(String(currentPassword || ""), row.password_hash)) {
+      throw new HttpError(401, "current_password_invalid", "当前密码不正确");
+    }
+    const password = validatePassword(newPassword, "新密码");
+    if (String(currentPassword) === password) {
+      throw new HttpError(422, "password_unchanged", "新密码不能与当前密码相同");
+    }
+    this.revokeCredentials(userId, hashPassword(password));
+    return { userId, username: row.username };
+  }
+
+  resetPassword(userId, newPassword) {
+    const row = this.db.prepare("SELECT * FROM users WHERE id = ?").get(userId);
+    if (!row) throw new HttpError(404, "user_not_found", "账户不存在");
+    const password = validatePassword(newPassword, "新密码");
+    this.revokeCredentials(userId, hashPassword(password));
+    return { userId, username: row.username };
+  }
+
+  revokeCredentials(userId, passwordHash) {
+    withTransaction(this.db, () => {
+      this.db.prepare("UPDATE users SET password_hash = ? WHERE id = ?").run(passwordHash, userId);
+      this.db.prepare("DELETE FROM sessions WHERE user_id = ?").run(userId);
+      this.db.prepare("DELETE FROM api_tokens WHERE user_id = ?").run(userId);
+    });
   }
 
   listUsers() {

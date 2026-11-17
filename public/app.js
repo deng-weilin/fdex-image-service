@@ -70,6 +70,13 @@ function showAuth() {
   state.user = null;
 }
 
+function resetAuthenticatedUi() {
+  state.pollers.forEach((timer) => clearInterval(timer));
+  state.pollers.clear();
+  state.activeJob = null;
+  showAuth();
+}
+
 function applyAuthFeatures(features = {}) {
   state.authFeatures = {
     allowRegistration: features.allowRegistration === true,
@@ -448,7 +455,7 @@ function setView(view) {
   state.currentView = view;
   qsa(".nav-item").forEach((item) => item.classList.toggle("active", item.dataset.view === view));
   qsa(".view").forEach((section) => section.classList.toggle("active", section.id === `view-${view}`));
-  const titles = { studio: ["CREATE", "创作台"], library: ["LIBRARY", "图稿库"], ledger: ["LEDGER", "账本"], connect: ["CONNECT", "WorkBuddy"], settings: ["SYSTEM", "系统设置"], admin: ["ADMIN", "成员与额度"] };
+  const titles = { studio: ["CREATE", "创作台"], library: ["LIBRARY", "图稿库"], ledger: ["LEDGER", "账本"], connect: ["CONNECT", "WorkBuddy"], account: ["ACCOUNT", "账户安全"], settings: ["SYSTEM", "系统设置"], admin: ["ADMIN", "成员与额度"] };
   qs("#topbar-kicker").textContent = titles[view]?.[0] || "";
   qs("#topbar-title").textContent = titles[view]?.[1] || "";
   qs("#sidebar").classList.remove("open");
@@ -599,13 +606,14 @@ function renderAdminUsers(users) {
   body.replaceChildren();
   for (const user of users) {
     const row = document.createElement("tr");
-    row.innerHTML = `<td><strong></strong><br><small></small></td><td></td><td></td><td></td><td></td><td><form class="admin-grant-form"><input type="number" min="1" max="100000" value="50" aria-label="发放额度"><button class="icon-button" title="发放额度">${icon("plus")}</button></form></td>`;
+    row.innerHTML = `<td><strong></strong><br><small></small></td><td></td><td></td><td></td><td></td><td><form class="admin-grant-form"><input type="number" min="1" max="100000" value="50" aria-label="发放额度"><button class="icon-button" title="发放额度">${icon("plus")}</button></form></td><td><button class="icon-button reset-password-button" type="button" title="重置密码">${icon("key")}</button></td>`;
     qs("strong", row).textContent = user.displayName;
     qs("small", row).textContent = `@${user.username}`;
     qs("td:nth-child(2)", row).textContent = user.role === "admin" ? "管理员" : "成员";
     qs("td:nth-child(3)", row).textContent = user.wallet.available;
     qs("td:nth-child(4)", row).textContent = user.wallet.reserved;
     qs("td:nth-child(5)", row).textContent = user.wallet.spent;
+    qs(".reset-password-button", row).addEventListener("click", () => openResetPasswordModal(user));
     qs("form", row).addEventListener("submit", async (event) => {
       event.preventDefault();
       const input = qs("input", event.currentTarget);
@@ -623,6 +631,31 @@ function renderAdminUsers(users) {
     });
     body.append(row);
   }
+}
+
+function openCreateUserModal() {
+  const form = qs("#create-user-form");
+  form.reset();
+  form.elements.namedItem("initialCredits").value = "100";
+  qs("#create-user-modal").hidden = false;
+  form.elements.namedItem("username").focus();
+}
+
+function closeCreateUserModal() {
+  qs("#create-user-modal").hidden = true;
+}
+
+function openResetPasswordModal(user) {
+  const form = qs("#reset-password-form");
+  form.reset();
+  qs("#reset-password-user-id").value = user.id;
+  qs("#reset-password-copy").textContent = `为 ${user.displayName}（@${user.username}）设置新密码。该账户的所有网页会话和 WorkBuddy 令牌会立即失效。`;
+  qs("#reset-password-modal").hidden = false;
+  form.elements.namedItem("newPassword").focus();
+}
+
+function closeResetPasswordModal() {
+  qs("#reset-password-modal").hidden = true;
 }
 
 function specFormPayload() {
@@ -856,9 +889,7 @@ function setupEvents() {
 
   qs("#logout-button").addEventListener("click", async () => {
     await api("/api/auth/logout", { method: "POST" }).catch(() => {});
-    state.pollers.forEach((timer) => clearInterval(timer));
-    state.pollers.clear();
-    showAuth();
+    resetAuthenticatedUi();
   });
 
   qsa("[data-view]").forEach((button) => button.addEventListener("click", () => setView(button.dataset.view)));
@@ -918,7 +949,101 @@ function setupEvents() {
   qs("#library-refresh").addEventListener("click", loadWorkspace);
   qs("#ledger-refresh").addEventListener("click", loadLedger);
   qs("#admin-refresh").addEventListener("click", loadAdmin);
+  qs("#admin-create-user-button").addEventListener("click", openCreateUserModal);
   qs("#settings-refresh").addEventListener("click", loadProviderSettings);
+
+  qs("#change-password-form").addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const form = event.currentTarget;
+    const data = new FormData(form);
+    const button = qs("button[type=submit]", form);
+    if (data.get("newPassword") !== data.get("confirmPassword")) {
+      toast("两次密码不一致", "请重新确认新密码。", "error");
+      form.elements.namedItem("confirmPassword").focus();
+      return;
+    }
+    setBusy(button, true, "更新中");
+    try {
+      await api("/api/account/password", {
+        method: "POST",
+        body: {
+          currentPassword: data.get("currentPassword"),
+          newPassword: data.get("newPassword")
+        }
+      });
+      resetAuthenticatedUi();
+      toast("密码已更新", "旧会话和令牌已撤销，请使用新密码重新登录。");
+    } catch (error) {
+      toast("密码更新失败", error.message, "error");
+      setBusy(button, false);
+    }
+  });
+
+  qs("#create-user-form").addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const form = event.currentTarget;
+    const data = new FormData(form);
+    const button = qs("button[type=submit]", form);
+    if (data.get("password") !== data.get("confirmPassword")) {
+      toast("两次密码不一致", "请重新确认初始密码。", "error");
+      form.elements.namedItem("confirmPassword").focus();
+      return;
+    }
+    setBusy(button, true, "创建中");
+    try {
+      const { user } = await api("/api/admin/users", {
+        method: "POST",
+        body: {
+          username: data.get("username"),
+          displayName: data.get("displayName"),
+          password: data.get("password"),
+          role: data.get("role"),
+          initialCredits: Number(data.get("initialCredits"))
+        }
+      });
+      closeCreateUserModal();
+      await loadAdmin();
+      toast("成员账户已开通", `${user.displayName} · ${user.wallet.available} Credits`);
+    } catch (error) {
+      toast("账户创建失败", error.message, "error");
+    } finally {
+      setBusy(button, false);
+    }
+  });
+
+  qs("#reset-password-form").addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const form = event.currentTarget;
+    const data = new FormData(form);
+    const button = qs("button[type=submit]", form);
+    if (data.get("newPassword") !== data.get("confirmPassword")) {
+      toast("两次密码不一致", "请重新确认新密码。", "error");
+      form.elements.namedItem("confirmPassword").focus();
+      return;
+    }
+    setBusy(button, true, "重置中");
+    try {
+      const userId = qs("#reset-password-user-id").value;
+      const result = await api(`/api/admin/users/${userId}/password`, {
+        method: "POST",
+        body: { newPassword: data.get("newPassword") }
+      });
+      closeResetPasswordModal();
+      if (result.reauthRequired) {
+        resetAuthenticatedUi();
+        toast("密码已重置", "当前管理员会话已撤销，请重新登录。");
+      } else {
+        toast("成员密码已重置", "旧会话与 WorkBuddy 令牌已撤销。");
+      }
+    } catch (error) {
+      toast("密码重置失败", error.message, "error");
+    } finally {
+      setBusy(button, false);
+    }
+  });
+
+  qsa("[data-close-create-user-modal]").forEach((node) => node.addEventListener("click", closeCreateUserModal));
+  qsa("[data-close-reset-password-modal]").forEach((node) => node.addEventListener("click", closeResetPasswordModal));
   qs("#toggle-api-key").addEventListener("click", () => {
     const input = qs("#settings-api-key");
     input.type = input.type === "password" ? "text" : "password";

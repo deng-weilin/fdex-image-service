@@ -6,6 +6,15 @@
 
 ## 生产环境
 
+推荐使用 `compose.yaml` 启动容器。`Dockerfile` 以非 root 的 `node` 用户运行，`compose.yaml` 将端口绑定到本机并把 `runtime/` 映射到 `fdex-runtime` Volume。生产变量模板见 `.env.production.example`。
+
+```bash
+cp .env.production.example .env.production
+docker compose up -d --build
+docker compose ps
+docker compose logs --tail=100 image-service
+```
+
 生产环境至少配置以下变量：
 
 ```dotenv
@@ -29,6 +38,8 @@ IMAGE_EDIT_MODEL=gpt-image-1
 ```
 
 生产模式会拒绝 HTTP Origin、演示账户和不足 12 个字符的 `ADMIN_PASSWORD`。首个管理员只在数据库中不存在该账号时创建；部署完成后应从运行环境移除 `ADMIN_PASSWORD`，避免长期保留明文引导密码。
+
+管理员可在网页创建成员与重置密码，成员可自行改密。任何密码变更都会撤销目标账户的全部会话和 WorkBuddy Token，这是交付时的预期安全行为。
 
 ## 反向代理
 

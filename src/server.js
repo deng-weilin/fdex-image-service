@@ -306,6 +306,16 @@ export function createServerApplication(options = {}) {
         return;
       }
 
+      if (method === "POST" && pathname === "/api/account/password") {
+        const current = auth.requireAuth(request);
+        authRateLimiter(request, "change-password");
+        const body = await readJson(request);
+        service.changePassword(current.user.id, body.currentPassword, body.newPassword);
+        response.setHeader("set-cookie", clearSessionCookie(config.secureCookies));
+        sendJson(response, 200, { ok: true, reauthRequired: true });
+        return;
+      }
+
       if (method === "GET" && pathname === "/api/me") {
         const current = auth.requireAuth(request);
         sendJson(response, 200, {
@@ -457,6 +467,34 @@ export function createServerApplication(options = {}) {
       if (method === "GET" && pathname === "/api/admin/users") {
         requireAdmin(request);
         sendJson(response, 200, { users: service.listUsers() });
+        return;
+      }
+
+      if (method === "POST" && pathname === "/api/admin/users") {
+        const current = requireAdmin(request);
+        authRateLimiter(request, "admin-create-user");
+        const body = await readJson(request);
+        const user = service.createUser({
+          username: body.username,
+          displayName: body.displayName,
+          password: body.password,
+          role: body.role,
+          initialCredits: body.initialCredits
+        }, current.user.id);
+        sendJson(response, 201, { user });
+        return;
+      }
+
+      const adminPasswordMatch = pathname.match(/^\/api\/admin\/users\/([^/]+)\/password$/);
+      if (method === "POST" && adminPasswordMatch) {
+        const current = requireAdmin(request);
+        authRateLimiter(request, "admin-reset-password");
+        const body = await readJson(request);
+        const result = service.resetPassword(adminPasswordMatch[1], body.newPassword);
+        if (result.userId === current.user.id) {
+          response.setHeader("set-cookie", clearSessionCookie(config.secureCookies));
+        }
+        sendJson(response, 200, { ...result, reauthRequired: result.userId === current.user.id });
         return;
       }
 
